@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  # Runtime without CUDA support
+  bumper-cpu:
+    build: 
+      context: ./bumper-cpu/
+      args:
+        - NAME=BUMPERCPU
+        - BUILD_VERSION=1.0.0
+        - BUILD_DATE=2137-69-42T07:08:09Z
+        - DESCRIPTION="Bumper Yolo CPU runtime"
+        - URL="https://github.com/filesmuggler/bumper-yolo"
+        - DOCKER_CMD="docker run -it --net=host --name=bumper-cpu-container docker-bumper-cpu /bin/bash"
+    network_mode: host
+    restart: on-failure
+    volumes:
+        - ${DATASETS_PATH}:/datasets:rw
+        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+        - DISPLAY=:1
+        - QT_X11_NO_MITSHM=1
+    privileged: true
+    command: tail -f /dev/null
+
+  # Runtime with CUDA support
+  bumper-gpu:
+    build: 
+      context: ./bumper-gpu/
+      args:
+        - NAME=BUMPERGPU
+        - BUILD_VERSION=1.0.0
+        - BUILD_DATE=2137-69-42T07:08:09Z
+        - DESCRIPTION="Bumper Yolo GPU runtime"
+        - URL="https://github.com/filesmuggler/bumper-yolo"
+        - DOCKER_CMD="docker run -it --net=host --gpus=all --name=bumper-gpu-container docker-bumper-gpu /bin/bash"
+    network_mode: host
+    restart: on-failure
+    volumes:
+        - ${DATASETS_PATH}:/datasets:rw
+        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+        - DISPLAY=:1
+        - QT_X11_NO_MITSHM=1
+    privileged: true
+    command: tail -f /dev/null
+    deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [gpu]
